@@ -1,4 +1,5 @@
 ﻿using API.Dtos;
+using AutoMapper;
 using Core.Entities;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -12,24 +13,41 @@ namespace API.Controllers
     {
         private readonly IGenericRepo<Product> _productRepo;
         private readonly IGenericRepo<Category> _categoryRepo;
+        private readonly IMapper _mapper;
 
         public ProductController(IGenericRepo<Product> productRepo,
-            IGenericRepo<Category> categoryRepo)
+            IGenericRepo<Category> categoryRepo,
+            IMapper mapper)
         {
             _productRepo = productRepo;
             _categoryRepo = categoryRepo;
+            _mapper = mapper;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IReadOnlyList<Product>>> GetAllProducts()
+        public async Task<ActionResult<IReadOnlyList<ProductDto>>> GetAllProducts()
         {
-            return Ok(await _productRepo.GetAllAsync());
+            var product = await _productRepo.GetAllWithIncludesAsync(p =>
+            p.Category);
+            var productToReturn = _mapper.Map<IEnumerable<ProductDto>>(product);
+            return Ok(productToReturn);
         }
 
+        //Using Specification pattern for includes
+        //[HttpGet("{id}")]
+        //public async Task<ActionResult<ProductDto>> GetProduct(int id)
+        //{
+        //    var product = await _productRepo.GetByIdAsync2(id, p => p.Category);
+        //    var productToReturn = _mapper.Map<ProductDto>(product);
+        //    return productToReturn;
+        //}
+
         [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetProduct(int id)
+        public async Task<ActionResult<ProductDto>> GetProduct(int id)
         {
-            return await _productRepo.GetByIdAsync(id);
+            var product = await _productRepo.GetByIdAsync(id);
+            var productToReturn = _mapper.Map<ProductDto>(product);
+            return productToReturn;
         }
 
         [HttpPost]
@@ -37,12 +55,14 @@ namespace API.Controllers
         {
             var product = new Product
             {
-
                 Name = productDto.Name,
                 Description = productDto.Description,
                 Price = productDto.Price,
                 PictureUrl = productDto.PictureUrl,
+                DiscountAmount = productDto.DiscountAmount,
                 CategoryId = productDto.CategoryId,
+                //should enter an existing ID in category table
+                
             };
             await _productRepo.AddAsync(product);
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);

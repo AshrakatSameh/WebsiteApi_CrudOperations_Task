@@ -10,8 +10,9 @@ namespace API.Dtos
         public decimal Price { get; set; }
         public string PictureUrl { get; set; }
         public int? DiscountAmount { get; set; }
-        //navigation property
+       
         public int CategoryId { get; set; }
+        public string? CategoryName { get; set; }
         
     }
 }

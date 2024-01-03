@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -53,20 +54,30 @@ namespace Infrastructure.Data
             }
         }
 
-        //public async Task UpdateAsync(T entity)
-        //{
-        //    _context.Entry(entity).State = EntityState.Modified;
-        //    await _context.SaveChangesAsync();
-        //}
+        //specification pattern
+        public async Task<IEnumerable<T>> GetAllWithIncludesAsync(params Expression<Func<T, 
+            object>>[] includes)
+        {
+            var query = _context.Set<T>().AsQueryable();
 
-        //public async Task DeleteAsync(int id)
-        //{
-        //    var entity = await _context.Set<T>().FindAsync(id);
-        //    if (entity != null)
-        //    {
-        //        _context.Set<T>().Remove(entity);
-        //        await _context.SaveChangesAsync();
-        //    }
-        //}
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<T> GetByIdAsync2(int id, params Expression<Func<T, object>>[] includes)
+        {
+            var query = _context.Set<T>().AsQueryable();
+
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+
+            return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
+        }
     }
 }

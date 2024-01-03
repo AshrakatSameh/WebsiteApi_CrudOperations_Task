@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,5 +15,11 @@ namespace Core.Interfaces
         Task AddAsync(T entity);
         Task UpdateAsync(T entity);
         Task DeleteAsync(int id);
+
+        //specification pattern
+        Task<IEnumerable<T>> GetAllWithIncludesAsync(params Expression<Func<T,
+            object>>[] includes);
+
+        Task<T> GetByIdAsync2(int id, params Expression<Func<T, object>>[] includes);
     }
 }
